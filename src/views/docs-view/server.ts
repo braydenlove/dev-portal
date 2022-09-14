@@ -46,13 +46,14 @@ import { getCustomLayout } from './utils/get-custom-layout'
  * will no longer be necessary, and we will no longer pass the
  * "latestVersionRef" to the remote content loader config.
  */
-function getBetaLatestVersionRef(slug: string): string | undefined {
+export function getBetaLatestVersionRef(slug: string): string | undefined {
 	const hasDevPortalBranch = [
 		'vault',
 		'waypoint',
 		'boundary',
 		'consul',
 		'nomad',
+		'packer',
 		'terraform-docs-common',
 		'ptfe-releases',
 		'terraform-cdk',

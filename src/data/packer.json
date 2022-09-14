@@ -61,25 +61,21 @@
 		{
 			"iconName": "docs",
 			"name": "General Documentation",
-			"mainBranch": "master",
 			"path": "docs",
 			"shortName": "Documentation"
 		},
 		{
 			"iconName": "docs",
-			"mainBranch": "master",
 			"name": "Guides",
 			"path": "guides"
 		},
 		{
 			"iconName": "docs",
-			"mainBranch": "master",
 			"name": "Intro",
 			"path": "intro"
 		},
 		{
 			"iconName": "docs",
-			"mainBranch": "master",
 			"name": "Plugins",
 			"path": "plugins"
 		}

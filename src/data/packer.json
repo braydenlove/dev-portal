@@ -61,21 +61,25 @@
 		{
 			"iconName": "docs",
 			"name": "General Documentation",
+			"mainBranch": "stable-website",
 			"path": "docs",
 			"shortName": "Documentation"
 		},
 		{
 			"iconName": "docs",
+			"mainBranch": "stable-website",
 			"name": "Guides",
 			"path": "guides"
 		},
 		{
 			"iconName": "docs",
+			"mainBranch": "stable-website",
 			"name": "Intro",
 			"path": "intro"
 		},
 		{
 			"iconName": "docs",
+			"mainBranch": "stable-website",
 			"name": "Plugins",
 			"path": "plugins"
 		}

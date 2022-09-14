@@ -53,7 +53,6 @@ export function getBetaLatestVersionRef(slug: string): string | undefined {
 		'boundary',
 		'consul',
 		'nomad',
-		'packer',
 		'terraform-docs-common',
 		'ptfe-releases',
 		'terraform-cdk',

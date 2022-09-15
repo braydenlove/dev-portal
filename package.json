@@ -102,7 +102,7 @@
 		"@hashicorp/react-call-to-action": "^4.1.1",
 		"@hashicorp/react-checkbox-input": "^5.0.2",
 		"@hashicorp/react-code-block": "^6.0.1",
-		"@hashicorp/react-command-line-terminal": "^2.0.4",
+		"@hashicorp/react-command-line-terminal": "^3.0.0",
 		"@hashicorp/react-consent-manager": "^8.0.1",
 		"@hashicorp/react-docs-page": "^17.7.0",
 		"@hashicorp/react-docs-sidenav": "^9.0.2",

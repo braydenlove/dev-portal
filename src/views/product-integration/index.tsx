@@ -4,12 +4,9 @@ import BreadcrumbBar from 'components/breadcrumb-bar'
 import { IconGithub16 } from '@hashicorp/flight-icons/svg-react/github-16'
 import TierBadge from '../product-integrations-landing/components/tier-badge'
 import ReactMarkdown from 'react-markdown'
-import DocsVersionSwitcher from 'components/docs-version-switcher'
 import DropdownDisclosure, {
 	DropdownDisclosureButtonItem,
-	DropdownDisclosureLinkItem,
 } from 'components/dropdown-disclosure'
-import SwingsetTestIcon from '__swingset-components/swingset-test-icon'
 
 export default function ProductIntegrationLanding({
 	integration,

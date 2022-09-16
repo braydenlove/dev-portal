@@ -12,6 +12,9 @@ export default function IntegrationsList({ integrations }) {
 						key={integration.id}
 						title={integration.name}
 						description={integration.description}
+						latestVersion={
+							integration.versions[integration.versions.length - 1]
+						}
 						organization={integration.organization.slug}
 						productSlug={integration.product.slug}
 						tier={integration.tier}
@@ -25,6 +28,7 @@ export default function IntegrationsList({ integrations }) {
 
 function IntegrationCard({
 	title,
+	latestVersion,
 	description,
 	organization,
 	tier,
@@ -38,7 +42,10 @@ function IntegrationCard({
 			href={`/${productSlug}/integrations/${integrationSlug}`}
 		>
 			<div className={s.header}>
-				<h3 className={s.heading}>{title}</h3>
+				<div className={s.headingWrapper}>
+					<h3 className={s.heading}>{title}</h3>
+					<span className={s.version}>v{latestVersion}</span>
+				</div>
 				<TierBadge tier={tier} productSlug={productSlug} size="small" />
 			</div>
 

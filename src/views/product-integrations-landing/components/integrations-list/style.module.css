@@ -3,7 +3,21 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+
+		& .headingWrapper {
+			display: flex;
+			align-items: center;
+			justify-content: flex-start;
+			flex-grow: 1;
+		}
 	}
+}
+
+.version {
+	composes: hds-typography-body-100 from global;
+	color: var(--token-color-foreground-faint);
+	font-weight: var(--token-typography-font-weight-medium);
+	margin-left: 8px;
 }
 
 .heading {

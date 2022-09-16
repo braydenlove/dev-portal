@@ -11,61 +11,69 @@ export default function FacetedIntegrationList({ integrations }) {
 	const [verifiedChecked, setVerifiedChecked] = useState(false)
 	const [communityChecked, setCommunityChecked] = useState(false)
 
+	// Filter out integrations that don't have releases yet
+	let filteredIntegrations = integrations
+	filteredIntegrations = filteredIntegrations.filter((integration) => {
+		return integration.versions && integration.versions.length > 0
+	})
+
 	// Figure out the list of tiers we want to display as filters
 	// based off of the integrations list that we are passed. If there
 	// are no community integrations passed, we simply won't display
 	// that checkbox.
-	const tierOptions = Array.from(new Set(integrations.map((i) => i.tier)))
+	const tierOptions = Array.from(
+		new Set(filteredIntegrations.map((i) => i.tier))
+	)
 
 	// Calculate the number of integrations that match each tier
-	const matchingOfficial = integrations.filter(
+	const matchingOfficial = filteredIntegrations.filter(
 		(i) => i.tier === 'official'
 	).length
-	const matchingVerified = integrations.filter(
+	const matchingVerified = filteredIntegrations.filter(
 		(i) => i.tier === 'verified'
 	).length
-	const matchingCommunity = integrations.filter(
+	const matchingCommunity = filteredIntegrations.filter(
 		(i) => i.tier === 'community'
 	).length
 
-	// Pull out the list of all of the categories used by our integrations
+	// Pull out the list of all of the components used by our integrations
 	// and sort them alphabetically so they are deterministically ordered.
-	const allCategories = integrations.map((i) => i.categories)
+	const allComponents = filteredIntegrations.map((i) => i.components)
 	// eslint-disable-next-line prefer-spread
-	const mergedCategories = [].concat.apply([], allCategories)
-	const categoryIDs = mergedCategories.map((c) => c.id)
-	const dedupedCategories = mergedCategories.filter(
-		({ id }, index) => !categoryIDs.includes(id, index + 1)
+	const mergedComponents = [].concat.apply([], allComponents)
+
+	const componentIDs = mergedComponents.map((c) => c.id)
+	const dedupedComponents = mergedComponents.filter(
+		({ id }, index) => !componentIDs.includes(id, index + 1)
 	)
-	const sortedCategories = dedupedCategories
+	const sortedComponents = dedupedComponents
 		.sort((a, b) => {
 			const textA = a.name.toLowerCase()
 			const textB = b.name.toLowerCase()
 			return textA < textB ? -1 : textA > textB ? 1 : 0
 		})
-		.map((category) => {
-			// Add # of occurances to the category object for facets
-			category.occurances = mergedCategories.filter(
-				(c) => c.slug === category.slug
+		.map((component) => {
+			// Add # of occurances to the component object for facets
+			component.occurances = mergedComponents.filter(
+				(c) => c.slug === component.slug
 			).length
-			return category
+			return component
 		})
 
-	// We have to manage our category checked state in a singular
-	// state object as there are an unknown number of categories.
-	const [categoryCheckedArray, setCategoryCheckedArray] = useState(
-		new Array(sortedCategories.length).fill(false)
+	// We have to manage our component checked state in a singular
+	// state object as there are an unknown number of components.
+	const [componentCheckedArray, setComponentCheckedArray] = useState(
+		new Array(sortedComponents.length).fill(false)
 	)
 
-	// Now actually filter our integrations if facets are selected
-	let filteredIntegrations = integrations
+	// Now filter our integrations if facets are selected
 	const atLeastOneFacetSelected =
 		officialChecked ||
 		verifiedChecked ||
 		communityChecked ||
-		categoryCheckedArray.includes(true)
+		componentCheckedArray.includes(true)
 	if (atLeastOneFacetSelected) {
-		filteredIntegrations = integrations.filter((integration) => {
+		filteredIntegrations = filteredIntegrations.filter((integration) => {
 			// Default tierMatch to true if nothing is checked, false otherwise
 			let tierMatch = !officialChecked && !verifiedChecked && !communityChecked
 			if (officialChecked && integration.tier === 'official') {
@@ -78,21 +86,21 @@ export default function FacetedIntegrationList({ integrations }) {
 				tierMatch = true
 			}
 
-			// Loop over each category to see if they match any checked categories
-			// If there are no categories selected, default this to true
-			let categoryMatch = !categoryCheckedArray.includes(true)
-			categoryCheckedArray.forEach((checked, index) => {
+			// Loop over each component to see if they match any checked components
+			// If there are no components selected, default this to true
+			let componentMatch = !componentCheckedArray.includes(true)
+			componentCheckedArray.forEach((checked, index) => {
 				if (checked) {
-					const checkedCategory = sortedCategories[index]
-					// Check each integration category
-					for (const category of integration.categories) {
-						if (category.slug === checkedCategory.slug) {
-							categoryMatch = true
+					const checkedComponent = sortedComponents[index]
+					// Check each integration component
+					for (const component of integration.components) {
+						if (component.slug === checkedComponent.slug) {
+							componentMatch = true
 						}
 					}
 				}
 			})
-			return tierMatch && categoryMatch
+			return tierMatch && componentMatch
 		})
 	}
 
@@ -127,17 +135,17 @@ export default function FacetedIntegrationList({ integrations }) {
 					/>
 				)}
 
-				<h5 className={s.facetCategoryTitle}>Category</h5>
-				{sortedCategories.map((category, index) => {
+				<h5 className={s.facetCategoryTitle}>Component</h5>
+				{sortedComponents.map((component, index) => {
 					return (
 						<FacetCheckbox
-							key={category.id}
-							label={category.name}
-							matching={category.occurances}
-							isChecked={categoryCheckedArray[index]}
+							key={component.id}
+							label={component.plural_name}
+							matching={component.occurances}
+							isChecked={componentCheckedArray[index]}
 							onChange={(e) =>
-								setCategoryCheckedArray(
-									categoryCheckedArray.map((v, i) => {
+								setComponentCheckedArray(
+									componentCheckedArray.map((v, i) => {
 										return i === index ? !v : v
 									})
 								)
@@ -155,8 +163,8 @@ export default function FacetedIntegrationList({ integrations }) {
 							setOfficialChecked(false)
 							setVerifiedChecked(false)
 							setCommunityChecked(false)
-							setCategoryCheckedArray(
-								categoryCheckedArray.map((v, i) => {
+							setComponentCheckedArray(
+								componentCheckedArray.map((v, i) => {
 									return false
 								})
 							)

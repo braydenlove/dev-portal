@@ -5,7 +5,11 @@ import { IconGithub16 } from '@hashicorp/flight-icons/svg-react/github-16'
 import TierBadge from '../product-integrations-landing/components/tier-badge'
 import ReactMarkdown from 'react-markdown'
 
-export default function ProductIntegrationLanding({ integration, product }) {
+export default function ProductIntegrationLanding({
+	integration,
+	product,
+	latestRelease,
+}) {
 	return (
 		<BaseLayout showFooterTopBorder>
 			<div className={s.integrationPage}>
@@ -40,6 +44,7 @@ export default function ProductIntegrationLanding({ integration, product }) {
 							<div className={s.topLine}>
 								<div className={s.headingWrapper}>
 									<h1>{integration.name}</h1>
+									<span className={s.version}>v2.0.0</span>
 									<TierBadge
 										tier={integration.tier}
 										productSlug={integration.product.slug}
@@ -56,7 +61,7 @@ export default function ProductIntegrationLanding({ integration, product }) {
 								</a>
 							</div>
 							<span className={s.org}>@{integration.organization.slug}</span>
-							<ReactMarkdown>{integration.readme}</ReactMarkdown>
+							<ReactMarkdown>{latestRelease.readme}</ReactMarkdown>
 						</div>
 					</div>
 				</div>

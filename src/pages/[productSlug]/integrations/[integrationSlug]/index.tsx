@@ -3,6 +3,7 @@ import { cachedGetProductData } from 'lib/get-product-data'
 import {
 	fetchProductIntegrations,
 	fetchIntegration,
+	fetchIntegrationRelease,
 } from 'lib/integrations-api-client'
 import ProductIntegration from 'views/product-integration'
 
@@ -29,9 +30,16 @@ export async function getStaticProps({ params }) {
 		params.productSlug,
 		params.integrationSlug
 	)
+	// Just fetching the most recent release for now
+	const latestRelease = await fetchIntegrationRelease(
+		params.productSlug,
+		params.integrationSlug,
+		integration.versions[integration.versions.length - 1]
+	)
 	return {
 		props: {
 			integration,
+			latestRelease,
 			product: {
 				...cachedGetProductData(params.productSlug),
 			},

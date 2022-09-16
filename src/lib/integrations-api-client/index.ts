@@ -40,3 +40,22 @@ export function fetchIntegration(product: string, slug: string) {
 		.then((res) => res.json())
 		.then((res) => res.result)
 }
+
+export function fetchIntegrationRelease(
+	product: string,
+	slug: string,
+	version: string
+) {
+	return fetch(
+		`${process.env.NEXT_PUBLIC_INTEGRATIONS_API_BASE_URL}/products/${product}/integrations/${slug}/releases/${version}`,
+		{
+			method: 'GET',
+			mode: 'cors',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		}
+	)
+		.then((res) => res.json())
+		.then((res) => res.result)
+}

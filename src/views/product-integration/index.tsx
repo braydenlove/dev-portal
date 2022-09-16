@@ -4,6 +4,12 @@ import BreadcrumbBar from 'components/breadcrumb-bar'
 import { IconGithub16 } from '@hashicorp/flight-icons/svg-react/github-16'
 import TierBadge from '../product-integrations-landing/components/tier-badge'
 import ReactMarkdown from 'react-markdown'
+import DocsVersionSwitcher from 'components/docs-version-switcher'
+import DropdownDisclosure, {
+	DropdownDisclosureButtonItem,
+	DropdownDisclosureLinkItem,
+} from 'components/dropdown-disclosure'
+import SwingsetTestIcon from '__swingset-components/swingset-test-icon'
 
 export default function ProductIntegrationLanding({
 	integration,
@@ -44,7 +50,23 @@ export default function ProductIntegrationLanding({
 							<div className={s.topLine}>
 								<div className={s.headingWrapper}>
 									<h1>{integration.name}</h1>
-									<span className={s.version}>v2.0.0</span>
+									<DropdownDisclosure
+										className={s.version}
+										color="secondary"
+										text={`Version ${latestRelease.version}`}
+									>
+										{integration.versions
+											.reverse()
+											.slice(1)
+											.map((version) => (
+												<DropdownDisclosureButtonItem
+													key={version}
+													onClick={() => console.log(`Clicked ${version}`)}
+												>
+													Version {version}
+												</DropdownDisclosureButtonItem>
+											))}
+									</DropdownDisclosure>
 									<TierBadge
 										tier={integration.tier}
 										productSlug={integration.product.slug}

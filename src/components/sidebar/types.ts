@@ -19,8 +19,11 @@ interface HeadingNavItem {
 	heading: string
 }
 
+interface HiddenItem {
+	hidden: boolean
+}
+
 interface BaseNavItem {
-	hidden?: boolean
 	title: string
 }
 
@@ -36,17 +39,14 @@ interface RawExternalLinkNavItem extends BaseNavItem {
 	href: string
 }
 
-// LinkNavItems should have either path or href, but not both
-interface RawLinkNavItem
-	extends RawInternalLinkNavItem,
-		RawExternalLinkNavItem {}
-
 // The main, general nav item type
 type RawSidebarNavItem =
 	| DividerNavItem
 	| HeadingNavItem
+	| HiddenItem
 	| RawSubmenuNavItem
-	| RawLinkNavItem
+	| RawInternalLinkNavItem
+	| RawExternalLinkNavItem
 
 /**
  * Interfaces for enriched nav items without filtering via the filter input
@@ -57,11 +57,19 @@ interface EnrichedSubmenuNavItem extends RawSubmenuNavItem {
 	routes: EnrichedNavItem[]
 }
 
-interface EnrichedLinkNavItem extends RawLinkNavItem {
+interface EnrichedInternalLinkNavItem extends RawInternalLinkNavItem {
+	id: string
 	fullPath: string
-	isActive: boolean
+}
+
+interface EnrichedExternalLinkNavItem extends RawExternalLinkNavItem {
+	href: string
 	id: string
 }
+
+interface EnrichedLinkNavItem
+	extends EnrichedInternalLinkNavItem,
+		EnrichedExternalLinkNavItem {}
 
 type EnrichedNavItem =
 	| DividerNavItem
@@ -195,6 +203,8 @@ type SidebarContentProps =
 type SidebarProps = SidebarBaseProps & SidebarContentProps
 
 export type {
+	EnrichedExternalLinkNavItem,
+	EnrichedInternalLinkNavItem,
 	EnrichedLinkNavItem,
 	EnrichedNavItem,
 	EnrichedSubmenuNavItem,
@@ -202,6 +212,10 @@ export type {
 	LinkNavItemWithMetaData,
 	MenuItem,
 	NavItemWithMetaData,
+	RawExternalLinkNavItem,
+	RawInternalLinkNavItem,
+	RawSidebarNavItem,
+	RawSubmenuNavItem,
 	SidebarProps,
 	SubmenuNavItemWithMetaData,
 }

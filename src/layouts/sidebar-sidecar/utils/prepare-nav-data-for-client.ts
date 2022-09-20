@@ -1,51 +1,24 @@
-import { NavNode } from '@hashicorp/react-docs-sidenav/types'
 import isAbsoluteUrl from 'lib/is-absolute-url'
-import { MenuItem } from 'components/sidebar'
-import path from 'path'
+import { EnrichedNavItem, RawSidebarNavItem } from 'components/sidebar/types'
+import {
+	PrepareNavNodeForClientOptions,
+	PrepareNavNodeForClientResult,
+} from '../types'
+import {
+	fullPathFromRelativeHref,
+	isNavBranch,
+	isNavLeaf,
+	isNavDirectLink,
+} from '.'
+import {
+	getIsRewriteableDocsLink,
+	getIsRewriteableLearnLink,
+	getTutorialMap,
+	rewriteExternalDocsLink,
+} from 'lib/remark-plugins/rewrite-tutorial-links/utils'
+import { rewriteExternalLearnLink } from 'lib/remark-plugins/rewrite-tutorial-links/utils/rewrite-external-learn-link'
 
-// TODO: export NavBranch and NavLeaf
-// TODO: types from react-docs-sidenav.
-// TODO: isNavBranch & isNavLeaf might
-// TODO: also make sense to include in the
-// TODO: react-docs-sidenav component,
-// TODO: maybe in the types.ts file as well.
-// TODO: ... or maybe we should move those types
-// TODO: into code within this repo, and consolidate
-// TODO: them with the MenuItem type?
-interface NavBranch {
-	title: string
-	routes: NavNode[]
-}
-
-interface NavLeaf {
-	title: string
-	path: string
-}
-
-// A NavDirectLink allows linking outside the content subpath.
-//
-// This includes links on the same domain,
-// for example, where the content subpath is `/docs`,
-// one can create a direct link with href `/use-cases`.
-//
-// This also allows for linking to external URLs,
-// for example, one could link to `https://hashiconf.com/`.
-interface NavDirectLink {
-	title: string
-	href: string
-}
-
-function isNavBranch(value: NavNode): value is NavBranch {
-	return value.hasOwnProperty('routes')
-}
-
-function isNavLeaf(value: NavNode): value is NavLeaf {
-	return value.hasOwnProperty('path')
-}
-
-function isNavDirectLink(value: NavNode): value is NavDirectLink {
-	return value.hasOwnProperty('href')
-}
+let TUTORIAL_MAP
 
 /**
  * Prepares all sidebar nav items for client-side rendering. Keeps track of the
@@ -53,20 +26,23 @@ function isNavDirectLink(value: NavNode): value is NavDirectLink {
  * returned from `prepareNavNodeForClient`. Also returns its own
  * `traversedNodes` since it is recursively called in `prepareNavDataForClient`.
  */
-function prepareNavDataForClient({
+async function prepareNavDataForClient({
 	basePaths,
 	nodes,
 	startingIndex = 0,
 }: {
 	basePaths: string[]
-	nodes: NavNode[]
+	nodes: RawSidebarNavItem[]
 	startingIndex?: number
-}): { preparedItems: MenuItem[]; traversedNodes: number } {
+}): Promise<{ preparedItems: EnrichedNavItem[]; traversedNodes: number }> {
+	TUTORIAL_MAP = await getTutorialMap()
+
 	const preparedNodes = []
 
 	let count = 0
-	nodes.forEach((node) => {
-		const result = prepareNavNodeForClient({
+	for (let i = 0; i < nodes.length; i += 1) {
+		const node = nodes[i]
+		const result = await prepareNavNodeForClient({
 			basePaths,
 			node,
 			nodeIndex: startingIndex + count,
@@ -76,7 +52,7 @@ function prepareNavDataForClient({
 			preparedNodes.push(preparedItem)
 			count += traversedNodes
 		}
-	})
+	}
 
 	return { preparedItems: preparedNodes, traversedNodes: count }
 }
@@ -98,15 +74,11 @@ function prepareNavDataForClient({
  *    `fullPath` properties.
  *  - Otherwise, nothing is added to an item but a unique `id`.
  */
-function prepareNavNodeForClient({
+export async function prepareNavNodeForClient({
 	basePaths,
 	node,
 	nodeIndex,
-}: {
-	node: NavNode
-	basePaths: string[]
-	nodeIndex: number
-}): { preparedItem: MenuItem; traversedNodes: number } {
+}: PrepareNavNodeForClientOptions): Promise<PrepareNavNodeForClientResult> {
 	/**
 	 * TODO: we need aligned types that will work here. NavNode (external import)
 	 * does not allow the `hidden` property.
@@ -122,7 +94,7 @@ function prepareNavNodeForClient({
 
 	if (isNavBranch(node)) {
 		// For nodes with routes, add fullPaths to all routes, and `id`
-		const { preparedItems, traversedNodes } = prepareNavDataForClient({
+		const { preparedItems, traversedNodes } = await prepareNavDataForClient({
 			basePaths,
 			nodes: node.routes,
 			startingIndex: nodeIndex + 1,
@@ -136,7 +108,7 @@ function prepareNavNodeForClient({
 			preparedItem,
 			traversedNodes: traversedNodes + 1,
 		}
-	} else if (isNavLeaf(node)) {
+	} else if (isNavLeaf(node) && basePaths.length > 0) {
 		/**
 		 * For nodes with paths, add fullPath to the node, and `id`
 		 * Note: pathWithIndexFix is a stopgap, `index` items should
@@ -150,7 +122,7 @@ function prepareNavNodeForClient({
 			path: pathWithIndexFix,
 			fullPath: `/${basePaths.join('/')}/${pathWithIndexFix}`,
 			id,
-		}
+		} as EnrichedNavItem
 		return { preparedItem, traversedNodes: 1 }
 	} else if (isNavDirectLink(node)) {
 		// Check if there is data that disagrees with DevDot's assumptions.
@@ -162,7 +134,7 @@ function prepareNavNodeForClient({
 		// Here in DevDot, we want this URL to be "/consul/downloads",
 		// and we want to use an internal rather than external link.
 		const hrefIsNotAbsolute = !isAbsoluteUrl(node.href)
-		if (hrefIsNotAbsolute) {
+		if (hrefIsNotAbsolute && basePaths.length > 0) {
 			/**
 			 * If we have a non-absolute NavDirectLink,
 			 * convert it to a NavLeaf node, and treat it similarly.
@@ -177,50 +149,27 @@ function prepareNavNodeForClient({
 			}
 			return { preparedItem, traversedNodes: 1 }
 		} else {
+			let newHref
+			if (getIsRewriteableLearnLink(node.href)) {
+				newHref = rewriteExternalLearnLink(new URL(node.href), TUTORIAL_MAP)
+			} else if (getIsRewriteableDocsLink(node.href)) {
+				newHref = rewriteExternalDocsLink(new URL(node.href))
+			}
+
 			// Otherwise, this is a genuinely external NavDirectLink,
 			// so we only need to add an `id` to it.
-			const preparedItem = { ...node, id }
+			const preparedItem = {
+				...node,
+				href: newHref || node.href,
+				id,
+			} as EnrichedNavItem
 			return { preparedItem, traversedNodes: 1 }
 		}
 	} else {
 		// Otherwise return the node unmodified
-		const preparedItem = { ...node, id }
+		const preparedItem = { ...node, id } as EnrichedNavItem
 		return { preparedItem, traversedNodes: 1 }
 	}
 }
 
-/**
- * Given a relative `href`, expected to be constructed for dot-io contexts,
- * as well as the current `basePaths`,
- * Return a `fullPath` for use with the Dev Dot URL structure.
- *
- * @param href A relative URL
- * @param basePaths The current set of basePaths
- */
-function fullPathFromRelativeHref(href: string, basePaths: string[]): string {
-	let fullPath
-	if (href.startsWith(`/${basePaths[0]}/`)) {
-		/**
-		 * If the path already starts with the basePaths[0], the product slug,
-		 * we use the href as the fullPath directly.
-		 */
-		fullPath = href
-	} else if (href.startsWith('/')) {
-		/**
-		 * If the path starts with a slash, we treat it as relative
-		 * to the previous dot-io setup. We prefix it with basePaths[0],
-		 * which should be the product slug.
-		 */
-		fullPath = `/${path.join(basePaths[0], href)}`
-	} else {
-		/**
-		 * If the path does not start with a slash, we treat it as relative
-		 * to the combined current basePath.
-		 */
-		fullPath = `/${path.join(basePaths.join('/'), href)}`
-	}
-	return fullPath
-}
-
-export { fullPathFromRelativeHref }
 export default prepareNavDataForClient

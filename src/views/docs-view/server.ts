@@ -238,10 +238,11 @@ export function getStaticGenerationFunctions<
 			/**
 			 * Add fullPaths and auto-generated ids to navData
 			 */
-			const { preparedItems: navDataWithFullPaths } = prepareNavDataForClient({
-				basePaths: [product.slug, basePath],
-				nodes: navData,
-			})
+			const { preparedItems: navDataWithFullPaths } =
+				await prepareNavDataForClient({
+					basePaths: [product.slug, basePath],
+					nodes: navData,
+				})
 
 			/**
 			 * Figure out of a specific docs version is being viewed
@@ -272,13 +273,14 @@ export function getStaticGenerationFunctions<
 				menuItems: navDataWithFullPaths as EnrichedNavItem[],
 				title: currentRootDocsPath.shortName || currentRootDocsPath.name,
 			}
+
 			/**
 			 * In some cases, the first nav item is a heading.
 			 * In these case, we'll visually hide the sidebar title,
 			 * since it will redundant right next to the authored title.
 			 */
 			const firstItemIsHeading =
-				typeof navDataWithFullPaths[0]?.heading == 'string'
+				navDataWithFullPaths[0]?.hasOwnProperty('heading')
 			if (firstItemIsHeading) {
 				docsSidebarLevel.visuallyHideTitle = true
 			}
